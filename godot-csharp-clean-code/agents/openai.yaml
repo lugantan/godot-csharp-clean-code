@@ -1,4 +1,0 @@
-interface:
-  display_name: "Godot C# Clean Code"
-  short_description: "Guide cleaner Godot C# architecture."
-  default_prompt: "Use $godot-csharp-clean-code to design or refactor a Godot C# project with clean scene trees, focused scripts, sane signals, and clear project structure."
