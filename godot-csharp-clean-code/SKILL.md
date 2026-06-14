@@ -30,9 +30,26 @@ Use this skill when Godot engine structure matters as much as code quality. Plan
 - Explain why a node is an Autoload, packed scene, component script, or local helper when the choice is not obvious.
 - Reuse [assets/godot-template](assets/godot-template) when the user wants a new Godot C# project skeleton or a concrete example of the recommended project layout.
 
+## Decomposition Rules (hard limits)
+
+Split by domain, and keep each unit small enough to reason about. These two limits are not left to discipline — they are enforced mechanically by [scripts/check-decomposition.ps1](scripts/check-decomposition.ps1), which exits non-zero on a violation so CI can block the merge.
+
+- **One class = one hand-written file.** Godot 4.x requires a single `partial` on every `Node`- or `Resource`-derived type so its source generator can emit the companion half (that half is the `*.g.cs` under `obj/`). Keep that one. Never add a *second* hand-written file for the same type (`PlayerController.Inventory.cs`, `PlayerController.SaveLoad.cs`).
+  - **Why a `partial` split is not decomposition:** a `partial class` is one type. The compiler concatenates every partial file into a single class with one shared set of fields and methods — splitting the file reduces no coupling and no responsibility. Every member still sees every other, the type is just as large and just as hard to test in isolation, and you have only hidden the growth from your size signals. It also cannot cross a layer boundary: logic left inside a `Node`-derived partial stays engine-coupled. The fix is to **extract a real collaborator** — a focused child-scene component or a plain C# helper class — not to add another partial half.
+- **No file over ~1000 lines.** Line count is a smell signal, not a budget to fill. A class approaching 1000 lines is almost always doing several domains' jobs at once; find the seams and extract each into its own focused script or scene until the original is a thin coordinator.
+
+Run the gate locally or in CI:
+
+```yaml
+- name: Enforce decomposition
+  shell: pwsh
+  run: pwsh scripts/check-decomposition.ps1 -Path . -MaxLines 1000
+```
+
 ## Review Checklist
 
 - Does each scene own one gameplay or UI concept?
+- Is each type a single hand-written file, and is every source file comfortably under 1000 lines?
 - Does each script match the responsibility of the node it is attached to?
 - Are lifecycle methods used for the right kind of work?
 - Are signals clearer than direct node coupling in this case?
@@ -47,3 +64,4 @@ Use this skill when Godot engine structure matters as much as code quality. Plan
 - Load [references/project-layout.md](references/project-layout.md) for Godot folder layout, naming, and feature grouping.
 - Load [references/csharp-style.md](references/csharp-style.md) for C# naming, exported fields, properties, partial classes, and script examples.
 - Reuse [assets/godot-template](assets/godot-template) for a near-runnable starter project that demonstrates scene composition, Autoload, HUD coordination, input, and clean script boundaries.
+- Run [scripts/check-decomposition.ps1](scripts/check-decomposition.ps1) to enforce the Decomposition Rules (one hand-written file per type, no file over 1000 lines) locally or in CI.

@@ -15,7 +15,7 @@ Use this reference when writing or reviewing Godot C# scripts.
 - Prefer small helper methods when they make lifecycle methods easier to scan.
 - Do not hide complex logic inside anonymous lambdas when named methods would be clearer.
 - Prefer properties for configuration and clearly exported members for editor-facing tuning.
-- Use partial classes as Godot expects, but do not spread one node's logic across many files unless there is a strong reason.
+- Keep the single `partial` Godot requires on Node- and Resource-derived types, but never spread one type's hand-written logic across multiple files. A `partial class` is one merged type, so a second hand-written file reduces no coupling and hides growth — extract a real collaborator instead. See the Decomposition Rules in SKILL.md; it is enforced by `scripts/check-decomposition.ps1`.
 
 ## Exported Members
 
